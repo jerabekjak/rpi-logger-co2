@@ -5,6 +5,8 @@ from datetime import datetime
 from sgp30 import SGP30
 import time
 import sys
+import os
+import numpy as np
 
 #disable warnings (optional)
 GPIO.setwarnings(False)
@@ -41,6 +43,23 @@ sgp30 = SGP30_Raw()
 display.lcd_display_string("LOVE YOU", 1)  # Write line of text to first line of display
 turnoff()
 
+print("Calculating calibration curve...")
+
+datapath = '{}/{}'.format(os.path.dirname(os.path.realpath(__file__)), 'data.csv')
+
+data = np.loadtxt(datapath, delimiter=';', skiprows=1)
+y = data[:,0]
+x = data[:,1]
+
+
+p = np.polyfit(x, y, 1)
+
+m = p[0]
+c = p[1]
+
+print('calibration line is {0:4.2f}x + {1:4.2f}'.format(m,c))
+
+
 print("Sensor warming up, please wait...")
 def crude_progress_bar():
     sys.stdout.write('.')
@@ -63,8 +82,9 @@ try:
         result = sgp30.get_air_quality()
         raw = sgp30.get_air_quality_raw()
         # if (raw[0] == 400): print (raw)
+        calibvals = m*raw[2]+c - 100
 
-        if (raw[0] > 900): 
+        if (calibvals > 1100): 
             turnoff()
             sleep(0.05)
             red()
@@ -78,9 +98,10 @@ try:
             red()
             sleep_time = 1.0 - 4*0.05
 
-        print ('{};{};{};{};{};{}'.format(datetime.now().date(),datetime.now().time(),raw[0],raw[1],raw[2],raw[3]))
+        print ('{};{};{};{};{};{};{}'.format(datetime.now().date(),datetime.now().time(),raw[0],raw[1],raw[2],raw[3],round(calibvals,0)))
         
-        display.lcd_display_string('co2e: {} ppm'.format(str(raw[0])), 1)
+        display.lcd_display_string('co2e: {} ppm'.format(str(round(calibvals,0))), 1)
+        #display.lcd_display_string('co2e: {} ppm'.format(str(raw[0])), 1)
         display.lcd_display_string('raw sig.: {}'.format(str(raw[2])), 2)
         # Uncomment the following line to loop with 1 sec delay
         sleep(sleep_time)
