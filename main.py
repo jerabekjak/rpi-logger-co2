@@ -29,20 +29,6 @@ def red():
     GPIO.output(greenPin,GPIO.HIGH)
     GPIO.output(bluePin,GPIO.HIGH)
 
-#sleep(0.5)
-#turnoff()
-#sleep(0.5)
-#red()
-#sleep(0.5)
-#turnoff()
-#sleep(0.5)
-#red()
-#sleep(0.5)
-#turnoff()
-#sleep(0.5)
-#red()
-#input('...')
-    
 display = drivers.Lcd()
 
 class SGP30_Raw(SGP30):
@@ -51,20 +37,10 @@ class SGP30_Raw(SGP30):
         reco2, rtvoc = self.command('measure_raw_signals')
         return (eco2, tvoc, reco2, rtvoc)
 
-
-
-
 sgp30 = SGP30_Raw()
-#print (sgp30.get_baseline())
-#print(sgp30.command('measure_air_quality'))
-#input()
-
 display.lcd_display_string("LOVE YOU", 1)  # Write line of text to first line of display
-
 turnoff()
-#input()
-#sleep(0.1)
-#red()
+
 print("Sensor warming up, please wait...")
 def crude_progress_bar():
     sys.stdout.write('.')
@@ -72,13 +48,13 @@ def crude_progress_bar():
 
 sgp30.start_measurement(crude_progress_bar)
 sys.stdout.write('\n')
-sgp30.command('init_air_quality')
+#sgp30.command('init_air_quality')
 #print (sgp30.command('measure_test'))
 
-
-
-
 red()
+
+sleep_time = 1.0
+
 try:
     print("Writing to display")
     while True:
@@ -100,14 +76,17 @@ try:
             turnoff()
             sleep(0.05)
             red()
+            sleep_time = 1.0 - 4*0.05
 
         print ('{};{};{};{};{};{}'.format(datetime.now().date(),datetime.now().time(),raw[0],raw[1],raw[2],raw[3]))
         
         display.lcd_display_string('co2e: {} ppm'.format(str(raw[0])), 1)
         display.lcd_display_string('raw sig.: {}'.format(str(raw[2])), 2)
         # Uncomment the following line to loop with 1 sec delay
-        sleep(1)
+        sleep(sleep_time)
+        sleep_time = 1.0
         display.lcd_clear()
+
 except KeyboardInterrupt:
     # If there is a KeyboardInterrupt (when you press ctrl+c), exit the program and cleanup
     print("Cleaning up!")
